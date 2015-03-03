@@ -1,6 +1,7 @@
 # LMMA
 
-combined Literature Mining and Microarray Analysis
+A combined literature mining and microarray analysis approach to construct gene networks of a specific biological system.
+
 
 ## Citation
 
