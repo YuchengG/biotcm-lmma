@@ -1,6 +1,15 @@
 $:.push File.expand_path("../lib", __FILE__)
 require 'biotcm-lmma'
 
+# test
+require 'rake/testtask'
+Rake::TestTask.new do |t|
+  t.libs << 'test'
+  t.test_files = FileList['test/**/test_*.rb']
+  # t.verbose = true
+end
+task default: :test
+
 # clean
 desc "Clean the directory"
 task :clean do
