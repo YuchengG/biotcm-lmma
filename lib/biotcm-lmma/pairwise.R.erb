@@ -1,0 +1,40 @@
+# Load
+data <- read.table('<%= datapath %>', header = TRUE, sep = '\t')
+rownames(data) <- data[,1]
+data <- as.data.frame(t(as.matrix(data[,-1])))
+
+<% if opts[:bgnet_path] %>
+bgnet <- read.table('<%= opts[:bgnet_path] %>', header = TRUE, sep = '\t')
+<% end %>
+
+# Utility function
+getPairIndex <- function(df, a, b) {
+  which((df[,1] == a & df[,2] == b)|(df[,1] == b & df[,2] == a))
+}
+
+# Test
+net <- data.frame()
+for(i in 1:length(data)) {
+  # Calculate all p-values
+  df <- data.frame()
+  for(j in (1:length(data))[-i]) {
+    <% if opts[:bgnet_path] %>
+    if(length(getPairIndex(bgnet, colnames(data)[i], colnames(data)[j])) == 0) {
+      next
+    }
+    <% end %>
+    t <- cor.test(data[,i], data[,j])
+    df[colnames(data)[j], 'cor'] <- t$estimate
+    df[colnames(data)[j], 'p-value'] <- t$p.value
+  }
+  df[,2] <- p.adjust(df[,2], method = 'fdr', n = length(df[,2]))
+  # Select pairs
+  for(j in which(df[,2] < 0.05)) {
+    net[nrow(net)+1, 'Source'] <- colnames(data)[i]
+    net[nrow(net),   'Target'] <- rownames(df)[j]
+    net[nrow(net),   'Correlation'] <- df[j, 1]
+  }
+}
+
+# Save
+write.table(net, '<%= f_result.path %>', quote = FALSE, sep = '\t', row.names = FALSE)
