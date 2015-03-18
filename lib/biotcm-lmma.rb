@@ -24,21 +24,21 @@ class BioTCM::Apps::LMMA < BioTCM::Apps::App
     fail NotImplementedError
   end
   # Build LM-based network
-  # @param context [BioTCM::Databases::Medline]
-  #   a medline object representing the context for LM-based network construction
+  # @param datapath [String] a path to a downloaded medline file
   # @param opts [Hash]
-  # @option opts [String] :node_savepath
-  # @option opts [String] :edge_savepath
+  # @option opts [String] :node_savepath a path to save node table
+  # @option opts [String] :edge_savepath a path to save edge table
+  # @option opts [Fixnum] :total_number the total number of the articles to analyze
   # @return [self]
-  def lm(context, opts = {})
-    raise ArgumentError unless context.is_a?(BioTCM::Databases::Medline)
+  def lm(datapath, opts = {})
+    raise 'File not exists' unless File.exist?(datapath)
 
-    lm_cooccurrence(context, opts)
+    lm_cooccurrence(datapath, opts)
 
     return self
   end
   # Build MA-based network
-  # @param datapath [String] path to microarray data
+  # @param datapath [String] a path to a gene expression file
   # @param opts [Hash]
   # @return [self]
   def ma(datapath, opts = {})
@@ -49,8 +49,10 @@ class BioTCM::Apps::LMMA < BioTCM::Apps::App
     return self
   end
   # Build LMMA-based network
-  def lmma(context, datapath, lm_opts = {}, ma_opts = {})
-    lm(context, lm_opts)
+  # @see #lm
+  # @see #ma
+  def lmma(lm_datapath, ma_datapath, lm_opts = {}, ma_opts = {})
+    lm(lm_datapath, lm_opts)
 
     # Save LM-based network as the background network
     f_bgnet = Tempfile.new('bgnet')
@@ -58,7 +60,7 @@ class BioTCM::Apps::LMMA < BioTCM::Apps::App
     f_bgnet.rewind
     ma_opts[:bgnet_path] = f_bgnet.path
 
-    ma(datapath, ma_opts)
+    ma(ma_datapath, ma_opts)
 
     # Build LMMA-based network
     @lmma_edge = Table.new(
@@ -75,13 +77,7 @@ class BioTCM::Apps::LMMA < BioTCM::Apps::App
   private
 
   # Use gene co-occurrences to build LM-based network
-  def lm_cooccurrence(context, opts = {})
-    path_to_medlines =
-      BioTCM.path_to("tmp/lmma_medlines_#{BioTCM.get :stamp}.txt")
-
-    # Download abstracts
-    context.download_abstracts(path_to_medlines)
-
+  def lm_cooccurrence(datapath, opts = {})
     node = {}
     edge = {}
     counter  = 0
@@ -89,12 +85,14 @@ class BioTCM::Apps::LMMA < BioTCM::Apps::App
     abstract = ''
     detector = BioTCM::Apps::GeneDetector.new
 
-    f_abstracts = File.open(path_to_medlines)
+    f_abstracts = File.open(datapath)
     f_abstracts.each do |line|
       if line =~ /^PMID- +(\d+)/
         pmid = $1
         counter += 1
-        BioTCM.logger.info('LMMA') { "Analyzing article \##{counter}/#{context.count}..." }
+        BioTCM.logger.info('LMMA') { "Analyzing article \##{counter}#{
+          opts[:total_number] ? "/#{opts[:total_number]}" : ''
+        }..." }
       elsif line =~ /^AB  -/
         abstract = line.gsub(/^AB  -\s*/, '').chomp
         abstract += line.gsub(/^\s+/, ' ') while (line = f_abstracts.gets.chomp) =~ /^\s/
