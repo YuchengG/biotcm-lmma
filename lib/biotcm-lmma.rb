@@ -85,7 +85,7 @@ class BioTCM::Apps::LMMA < BioTCM::Apps::App
     abstract = ''
     detector = BioTCM::Apps::GeneDetector.new
 
-    f_abstracts = File.open(datapath)
+    f_abstracts = File.open(datapath, 'r:utf-8')
     f_abstracts.each do |line|
       if line =~ /^PMID- +(\d+)/
         pmid = $1
