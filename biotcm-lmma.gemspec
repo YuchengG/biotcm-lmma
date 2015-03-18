@@ -18,5 +18,5 @@ Gem::Specification.new do |s|
   s.files       = FileList['lib/**/*'].to_a
 
   s.required_ruby_version = '>= 2.0.0'
-  s.add_runtime_dependency "biotcm", "~> 0.2.0"
+  s.add_runtime_dependency "biotcm", "~> 0.2"
 end
