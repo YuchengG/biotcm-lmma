@@ -10,6 +10,12 @@ Rake::TestTask.new do |t|
 end
 task default: :test
 
+# doc
+desc 'Open YARD doc server'
+task :doc do
+  system('yard server -r')
+end
+
 # clean
 desc "Clean the directory"
 task :clean do
