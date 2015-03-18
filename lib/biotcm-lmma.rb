@@ -9,7 +9,7 @@ class BioTCM::Apps::LMMA < BioTCM::Apps::App
   include BioTCM::Modules::WorkingDir
 
   # Current version
-  VERSION = "0.1.0"
+  VERSION = "0.2.0"
 
   attr_reader :lm_node, :lm_edge
   attr_reader :ma_edge
